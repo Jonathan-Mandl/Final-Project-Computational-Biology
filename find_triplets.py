@@ -5,6 +5,7 @@ from extract_locations import extract_locations
 import tarfile
 import gzip
 
+
 def get_identities_coverage(id_list):
     """
     Retrieves identity and coverage data for protein IDs.
@@ -95,54 +96,67 @@ def find_triplets():
     Finds protein triplets based on atom locations, identity, and coverage data.
     Writes the results to a file.
     """
-
+    # use extract locations method to get a dictionary of locations per id for every protein and dictionary index list for every protein iD
     locations_per_id, indexes_per_id = extract_locations()
-    triplets_per_id = {}
-    id_list = locations_per_id.keys()
+    triplets_per_id = {}  # dictionary that contains triplets list for every protein ID
+    id_list = locations_per_id.keys()  # list of protein IDs
+    # extract identity and coverage per id dictionaries from blast output file using get_identities_coverage() method
     identity_per_id, coverage_per_id = get_identities_coverage(id_list)
-    counter=0
+    counter = 0
     for human_id, locations in locations_per_id.items():
         identity = identity_per_id[human_id]
         identity_percentage = identity[0] / identity[1]
         coverage = coverage_per_id[human_id]
-
+        # check that the identity and coverage meet our threshold
         if identity_percentage > 0.94 and coverage > 0.94:
-            counter+=1
+            counter += 1
             print(counter)
-            index_list = indexes_per_id[human_id]
+            index_list = indexes_per_id[human_id]  # get index list of protein from indexes_per_id dictionary
             triplets = []
             neighbor_dict = {}
-
-            # Step 1: Create a dictionary of neighboring amino acids within 5 units of distance
-            num_aa = len(index_list)
+            # Create a dictionary of neighboring amino acids within 5 angstrom of distance
+            num_aa = len(index_list)  # number of different indexes in protein
             for i in range(num_aa):
+                # iterate over every atom location in index i and in every other index j and find indexes where there is euclidian distance less than 5
                 neighbor_dict[i] = [j for j in range(num_aa) for point1 in locations[index_list[j]] for point2 in
                                     locations[index_list[i]] if (np.linalg.norm(point1 - point2) < 5 and i != j)]
 
-            # Step 2: Find triplets where one amino acid is within 5 units of distance from the other two
+            # Find triplets where one amino acid is within 5 angstrom of distance from the other two
+            # iterate over every combination of indexes
             for i, j in itertools.combinations(range(num_aa), 2):
+                # if indexes are equal, skip
                 if i == j:
                     continue
+                # define sets of neighbors of each amino acid index using neighbor_dict we created before
                 neighbors_i = set(neighbor_dict[i])
                 neighbors_j = set(neighbor_dict[j])
+                # find common neighbors using intersection between 2 sets of neighbors
                 common_neighbors = neighbors_i.intersection(neighbors_j)
+                # iterate over common neighbors
                 for k in common_neighbors:
+                    # ensure common neighbors are not one of the 2 indexes we are checking
                     if k != i and k != j:
+                        # triplets is the sorted tuple of the 2 indexes plus the common neighbors
                         triplet = sorted([index_list[i], index_list[j], index_list[k]])
+                        # ensure triplets are more than 4 units apart in the sequence itself
                         if triplet[1] - triplet[0] > 4 and triplet[2] - triplet[1] > 4:
                             triplets.append(triplet)
 
+            # filter only the unique triplets
             if len(triplets):
                 unique_triplets = []
                 for triplet in triplets:
                     if triplet not in unique_triplets:
                         unique_triplets.append(triplet)
+                # add the unique triplets for our protein to the triplets_per_id dictionary in the human_id entry
                 triplets_per_id[human_id] = unique_triplets
 
-    id_list = triplets_per_id.keys()
+    id_list = triplets_per_id.keys() # id list of protein which contain triplets
+    # get the titles for our proteins that contain triplets using title_per_id() method
     title_per_id = get_title(id_list)
 
-    with open("3d_triplets_above_94_every_atom.txt", "a") as output_file:
+    # add each protein and all of its triplets to the 3d triplets file
+    with open("3d_triplets_every_atom.txt", "a") as output_file:
         for human_id, triplets in triplets_per_id.items():
             title = title_per_id[human_id]
             identity = identity_per_id[human_id]
