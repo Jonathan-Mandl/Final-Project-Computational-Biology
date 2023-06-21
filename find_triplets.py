@@ -110,7 +110,7 @@ def find_triplets():
         # check that the identity and coverage meet our threshold
         if identity_percentage > 0.94 and coverage > 0.94:
             index_list = indexes_per_id[human_id]  # get index list of protein from indexes_per_id dictionary
-            triplets = []
+            triplets = set()
             neighbor_dict = {}
             # Create a dictionary of neighboring amino acids within 5 angstrom of distance
             num_aa = len(index_list)  # number of different indexes in protein
@@ -135,24 +135,18 @@ def find_triplets():
                     # ensure common neighbors are not one of the 2 indexes we are checking
                     if k != i and k != j:
                         # triplets is the sorted tuple of the 2 indexes plus the common neighbors
-                        triplet = sorted([index_list[i], index_list[j], index_list[k]])
+                        triplet = tuple(sorted([index_list[i], index_list[j], index_list[k]]))
                         # ensure triplets are more than 4 units apart in the sequence itself
                         if triplet[1] - triplet[0] > 4 and triplet[2] - triplet[1] > 4:
-                            triplets.append(triplet)
+                            triplets.add(triplet)
 
-            # filter only the unique triplets
             if len(triplets):
-                unique_triplets = []
-                for triplet in triplets:
-                    if triplet not in unique_triplets:
-                        unique_triplets.append(triplet)
-                # add the unique triplets for our protein to the triplets_per_id dictionary in the human_id entry
-                triplets_per_id[human_id] = unique_triplets
+                # add the triplets for our protein to the triplets_per_id dictionary in the human_id entry
+                triplets_per_id[human_id] = triplets
 
-    id_list = triplets_per_id.keys() # id list of protein which contain triplets
+    id_list = list(triplets_per_id.keys()) # id list of protein which contain triplets
     # get the titles for our proteins that contain triplets using title_per_id() method
     title_per_id = get_title(id_list)
-
     # add each protein and all of its triplets to the 3d triplets file
     with open("3d_triplets_every_atom.txt", "a") as output_file:
         for human_id, triplets in triplets_per_id.items():
