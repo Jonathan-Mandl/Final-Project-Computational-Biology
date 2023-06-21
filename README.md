@@ -18,7 +18,7 @@ Authors: Jonathan Mandl and Dina Englard
 - These commands, to be run in cmd, create a protein sequence database using "makeblastdb" and then perform a protein sequence comparison using "blastp" between human protein sequences and the sequences in the Pan Troglodytes NR (non-redundant) database which we downloaded from the NCBI website. The top five matches are saved in the "nr_blast_output.txt" file.
 
 ## Parse_blast <a name="parse_blast"></a>
-- This code reads a BLAST output file, parses the file using NCBIStandalone.BlastParser, and iterates over the blast records and their alignments. It extracts relevant information such as query and hit IDs, alignment statistics, and performs an alignment analysis using a custom align() method. The code then prints the alignment statistics and writes the different indexes (where there are differences between human and chimp sequences) to a file for further analysis.
+- This code reads the BLAST output file which contains the best Pan Troglodytes alignments for each human protein, parses the file using NCBIStandalone.BlastParser, and iterates over the blast records and their alignments. It extracts relevant information such as query and hit IDs, alignment statistics, and performs an alignment analysis using the align() method, which returns the diffrent indexes between the 2 homologs. The code then prints the alignment statistics and writes the different indexes (where there are differences between human and Pan Troglodyte sequences) to a file for further analysis.
 - The output file looks like this: human ID, Pan Troglodytes ID, different indexes.
 
 ## PDB_Locations <a name="pdb_locations"></a>
