@@ -102,15 +102,13 @@ def find_triplets():
     id_list = locations_per_id.keys()  # list of protein IDs
     # extract identity and coverage per id dictionaries from blast output file using get_identities_coverage() method
     identity_per_id, coverage_per_id = get_identities_coverage(id_list)
-    counter = 0
+
     for human_id, locations in locations_per_id.items():
         identity = identity_per_id[human_id]
         identity_percentage = identity[0] / identity[1]
         coverage = coverage_per_id[human_id]
         # check that the identity and coverage meet our threshold
         if identity_percentage > 0.94 and coverage > 0.94:
-            counter += 1
-            print(counter)
             index_list = indexes_per_id[human_id]  # get index list of protein from indexes_per_id dictionary
             triplets = []
             neighbor_dict = {}
